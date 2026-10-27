@@ -1,0 +1,383 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+
+:root {
+  font-family: 'Nunito', sans-serif;
+  --panel-bg: rgba(12, 44, 150, 0.85);
+  --panel-low: rgba(7, 36, 131, 0.88);
+  --panel-high: #1640c9;
+  --panel-border: #040a33;
+  --panel-focus: #56b2fd;
+  --panel-text: #f0f0f0;
+  --panel-button: #2a51d1;
+  --panel-button-hover: #1e44be;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  font-family: 'Nunito', sans-serif;
+  background-color: #124da5;
+  background-image:
+    radial-gradient(circle at 20px 20px, #ffffff0c 2px, transparent 3px),
+    radial-gradient(circle at 50px 50px, #001e6418 2px, transparent 3px);
+  background-size: 70px 70px;
+  color: var(--panel-text);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 5%;
+  background: var(--panel-low);
+  border-bottom: 3px solid var(--panel-border);
+}
+
+.logo {
+  color: #fff;
+  font-size: 25px;
+  font-weight: 900;
+  text-decoration: none;
+  text-shadow: 2px 2px #071c65;
+}
+
+.online {
+  color: #dce7ff;
+  font-size: 13px;
+}
+
+.online span {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #56e881;
+}
+
+.layout {
+  width: min(1000px, 94%);
+  margin: 34px auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.hero {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 12px 10px 24px;
+}
+
+.banana-icon {
+  font-size: 52px;
+  filter: drop-shadow(3px 3px 0 #08245e);
+}
+
+h1 {
+  margin: 4px 0;
+  font-size: clamp(34px, 5vw, 52px);
+  font-weight: 900;
+  letter-spacing: -1px;
+  color: #fff;
+  text-shadow: 3px 3px 0 #08245e;
+}
+
+.hero p {
+  color: #dce7ff;
+  font-size: 15px;
+}
+
+.panel {
+  min-width: 0;
+  background: var(--panel-bg);
+  border: 3px solid var(--panel-border);
+  border-radius: 5px;
+  padding: 22px;
+  box-shadow: 4px 4px 0 #001b55a6;
+}
+
+.panel h2 {
+  margin-bottom: 22px;
+  font-size: 21px;
+  font-weight: 900;
+  color: white;
+}
+
+label {
+  display: block;
+  margin: 15px 0 7px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #f0f0ff;
+}
+
+input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 2px solid #707070;
+  border-radius: 3px;
+  color: #2c2c2c;
+  font: inherit;
+  outline: none;
+}
+
+input:focus {
+  border-color: var(--panel-focus);
+  box-shadow: 0 0 0 2px #56b2fd55;
+}
+
+/* Avatar customizer */
+.avatar-customizer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 10px;
+  background: rgba(4, 10, 51, 0.25);
+  border: 2px solid var(--panel-border);
+  border-radius: 5px;
+}
+
+.avatar-preview {
+  position: relative;
+  width: 144px;
+  height: 144px;
+  overflow: hidden;
+  background: #fff;
+  border: 3px solid var(--panel-border);
+  border-radius: 5px;
+  image-rendering: pixelated;
+}
+
+.avatar-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: 1000% 1000%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.avatar-color {
+  background-image: url("/image/avatar/color_atlas.gif");
+  z-index: 1;
+}
+
+.avatar-eyes {
+  background-image: url("/image/avatar/eyes_atlas.gif");
+  z-index: 2;
+}
+
+.avatar-mouth {
+  background-image: url("/image/avatar/mouth_atlas.gif");
+  z-index: 3;
+}
+
+.avatar-controls {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 8px;
+}
+
+.avatar-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px 42px;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar-control span {
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.avatar-control button {
+  width: 42px;
+  height: 36px;
+  border: 2px solid #071a64;
+  border-radius: 4px;
+  background: var(--panel-button);
+  color: white;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 2px 0 #071a64;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.avatar-control button:hover {
+  background: var(--panel-button-hover);
+}
+
+.avatar-control button:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.avatar-control button:focus-visible,
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 3px solid var(--panel-focus);
+  outline-offset: 3px;
+}
+
+/* Main action buttons */
+.primary,
+.secondary {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  border: 2px solid #071a64;
+  border-radius: 4px;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #071a64;
+  transition: background 0.15s, transform 0.15s;
+}
+
+/* plAY now */
+.primary {
+  background: #7dff45;
+  color: #302100;
+}
+
+.primary:hover {
+  background: #3bb001;
+}
+
+
+.secondary {
+  background: var(--panel-button);
+  color: white;
+}
+
+.secondary:hover {
+  background: var(--panel-button-hover);
+}
+
+/* Avoid extra top spacing on the randomize button */
+.avatar-customizer > .secondary {
+  margin-top: 0;
+}
+
+.primary:active,
+.secondary:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.divider {
+  height: 12px;
+  margin: 24px 0;
+  text-align: center;
+  border-bottom: 1px solid #ffffff55;
+}
+
+.divider span {
+  padding: 0 10px;
+  background: #124da5;
+  color: #dce7ff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.message {
+  margin-top: 14px;
+  color: #dce7ff;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* How-to-play instructions */
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 19px 0;
+}
+
+.step > span {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border: 2px solid #06164e;
+  border-radius: 4px;
+  background: #ffca45;
+  color: #302100;
+  font-weight: 900;
+}
+
+.step strong {
+  font-size: 14px;
+  color: white;
+}
+
+.step p {
+  margin-top: 4px;
+  color: #dce7ff;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+footer {
+  padding: 15px 20px 28px;
+  color: #dce7ff;
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 650px) {
+  .layout {
+    grid-template-columns: 1fr;
+    margin-top: 20px;
+  }
+
+  .hero {
+    grid-column: auto;
+  }
+
+  .topbar {
+    padding: 14px 4%;
+  }
+
+  .logo {
+    font-size: 20px;
+  }
+
+  .online {
+    font-size: 11px;
+    text-align: right;
+  }
+
+  .panel {
+    padding: 18px;
+  }
+
+  .avatar-preview {
+    width: 128px;
+    height: 128px;
+  }
+}
