@@ -6,6 +6,7 @@
 const express = require("express");
 const path = require("path");
 
+const { sessionMiddleware } = require("./middleware/session");
 const puzzleRoutes = require("./routes/puzzle.routes");
 const { rooms } = require("./services/room.service");
 
@@ -15,6 +16,9 @@ const app = express();
 // (public/ is one level above src/, hence "..")
 app.use(express.static(path.join(__dirname, "..", "public")));
 app.use(express.json({ limit: "10kb" }));
+
+// Login sessions: adds req.session to every request.
+app.use(sessionMiddleware);
 
 // API status.
 app.get("/api/status", (req, res) => {
