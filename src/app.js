@@ -8,6 +8,9 @@ const path = require("path");
 
 const { sessionMiddleware } = require("./middleware/session");
 const puzzleRoutes = require("./routes/puzzle.routes");
+
+const authRoutes = require("./routes/auth.routes");
+
 const { rooms } = require("./services/room.service");
 
 const app = express();
@@ -32,5 +35,7 @@ app.get("/api/status", (req, res) => {
 // Mount the puzzle routes. Inside puzzle.routes.js the paths are "/" and
 // "/check", so the browser still calls /api/puzzle and /api/puzzle/check.
 app.use("/api/puzzle", puzzleRoutes);
+
+app.use("/api/auth", authRoutes);
 
 module.exports = app;
