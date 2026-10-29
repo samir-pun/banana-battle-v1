@@ -8,12 +8,17 @@ const { Server } = require("socket.io");
 
 const app = require("./app");
 const { PORT } = require("./config");
+const { sessionMiddleware } = require("./middleware/session");
 const { registerSocketHandlers } = require("./sockets/game.socket");
 
 // Socket.IO needs the raw HTTP server, not just the Express app,
 // so that HTTP requests and WebSocket connections share one port.
 const server = http.createServer(app);
 const io = new Server(server);
+
+// Run the SAME session middleware on every socket connection, so the
+// login cookie is understood by Socket.IO too (socket.request.session).
+io.engine.use(sessionMiddleware);
 
 registerSocketHandlers(io);
 

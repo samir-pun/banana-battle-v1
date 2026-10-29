@@ -3,12 +3,16 @@
 // Events the server LISTENS for:  createRoom, joinRoom, disconnect
 // Events the server EMITS:        roomCreated, roomJoined, playersUpdate, gameError
 //
-// Moved from the original server.js, logic unchanged.
+// Sockets are authenticated: only logged-in users (valid session) may connect.
+//
+// Moved from the original server.js, logic unchanged apart from the
+// authentication check at the bottom.
 // Code generated with AI assistance (Claude, Anthropic), then reviewed
 // and moved into this module by me.
 
 const { MAX_PLAYERS_PER_ROOM } = require("../config");
 const { rooms, generateRoomCode } = require("../services/room.service");
+const { getUserById } = require("../services/user.service");
 const { validateNickname, validateAvatar } = require("../utils/validators");
 
 function registerSocketHandlers(io) {
@@ -153,9 +157,26 @@ function registerSocketHandlers(io) {
     broadcastPlayers(roomCode);
   }
 
+  // Authentication for sockets: only logged-in users may connect.
+  // This runs once, when the connection is made.
+  io.use((socket, next) => {
+    const userId = socket.request.session?.userId;
+    const user = userId ? getUserById(userId) : null;
+
+    if (!user) {
+      return next(new Error("unauthorized"));
+    }
+
+    // Remember WHO this socket is, taken from the server-side session,
+    // never from anything the browser sends.
+    socket.data.userId = user.id;
+    socket.data.username = user.username;
+    next();
+  });
+
   // Register the event listeners for every new connection.
   io.on("connection", (socket) => {
-    console.log("Player connected:", socket.id);
+    console.log(`Player connected: ${socket.data.username} (${socket.id})`);
 
     socket.on("createRoom", (data) => {
       createRoom(socket, data);
