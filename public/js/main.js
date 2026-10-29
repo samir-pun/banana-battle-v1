@@ -4,9 +4,10 @@
 //
 // Events the client EMITS:    createRoom, joinRoom
 // Events the client LISTENS:  roomCreated, roomJoined, gameError,
-//                             connect, disconnect
+//                             connect, connect_error, disconnect
 //
-// Moved from the original client.js, logic unchanged.
+// Moved from the original client.js, logic unchanged apart from the
+// login check and the connect_error handler.
 // Code generated with AI assistance (Claude, Anthropic), then reviewed
 // and moved into this module by me.
 
@@ -112,6 +113,13 @@ socket.on("connect", () => {
   console.log("Connected to Banana Battle server:", socket.id);
 });
 
+// The server rejected the connection because there is no login session.
+socket.on("connect_error", (error) => {
+  if (error.message === "unauthorized") {
+    window.location.href = "/login.html";
+  }
+});
+
 socket.on("disconnect", () => {
   if (message) {
     message.textContent = "Connection lost. Reconnecting...";
@@ -120,3 +128,38 @@ socket.on("disconnect", () => {
 
 // Render the default avatar on the landing page.
 renderAvatar();
+
+// --------------------------------------------------
+// LOGIN CHECK (virtual identity)
+// --------------------------------------------------
+
+// Ask the server who is logged in. The answer depends on the httpOnly
+// session cookie, which this script cannot read - only the server can.
+// Not logged in -> go to the login page.
+async function requireLogin() {
+  try {
+    const response = await fetch("/api/auth/me");
+
+    if (!response.ok) {
+      window.location.href = "/login.html";
+      return;
+    }
+
+    const user = await response.json();
+
+    // Prefill the nickname with the account's username (can still be changed).
+    nickname.value = user.username;
+
+    const logoutBtn = document.getElementById("logoutBtn");
+    logoutBtn.hidden = false;
+
+    logoutBtn.addEventListener("click", async () => {
+      await fetch("/api/auth/logout", { method: "POST" });
+      window.location.href = "/login.html";
+    });
+  } catch (error) {
+    window.location.href = "/login.html";
+  }
+}
+
+requireLogin();

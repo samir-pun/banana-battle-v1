@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banana Battle - Log in</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="logo" href="/"> Banana Battle</a>
+    <span class="online">
+      <span></span> Multiplayer party game
+    </span>
+  </header>
+
+  <main class="layout auth-layout">
+    <section class="hero">
+      <div class="banana-icon"></div>
+      <h1>Banana Battle</h1>
+      <p>Log in or create an account to play.</p>
+    </section>
+
+    <section class="panel">
+      <form id="authForm" novalidate>
+        <label for="username">Username</label>
+        <input
+          id="username"
+          maxlength="20"
+          placeholder="3-20 letters, numbers or _"
+          autocomplete="username"
+          required
+        >
+
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          maxlength="72"
+          placeholder="At least 8 characters"
+          autocomplete="current-password"
+          required
+        >
+
+        <button id="loginBtn" class="primary" type="submit">
+          Log in
+        </button>
+
+        <div class="divider">
+          <span>NEW HERE?</span>
+        </div>
+
+        <button id="registerBtn" class="secondary" type="button">
+          Create account
+        </button>
+
+        <p id="authMessage" class="message" aria-live="polite">
+          Enter your details to continue.
+        </p>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    Made for friends, puzzles, and a little banana chaos 🍌
+  </footer>
+
+  <script src="js/auth.js"></script>
+</body>
+</html>

@@ -6,8 +6,14 @@
 const express = require("express");
 const path = require("path");
 
+const { sessionMiddleware } = require("./middleware/session");
 const puzzleRoutes = require("./routes/puzzle.routes");
+
+const authRoutes = require("./routes/auth.routes");
+
 const { rooms } = require("./services/room.service");
+
+const { requireAuth } = require("./middleware/requireAuth");
 
 const app = express();
 
@@ -15,6 +21,9 @@ const app = express();
 // (public/ is one level above src/, hence "..")
 app.use(express.static(path.join(__dirname, "..", "public")));
 app.use(express.json({ limit: "10kb" }));
+
+// Login sessions: adds req.session to every request.
+app.use(sessionMiddleware);
 
 // API status.
 app.get("/api/status", (req, res) => {
@@ -27,6 +36,8 @@ app.get("/api/status", (req, res) => {
 
 // Mount the puzzle routes. Inside puzzle.routes.js the paths are "/" and
 // "/check", so the browser still calls /api/puzzle and /api/puzzle/check.
-app.use("/api/puzzle", puzzleRoutes);
+app.use("/api/puzzle", requireAuth, puzzleRoutes);
+
+app.use("/api/auth", authRoutes);
 
 module.exports = app;
