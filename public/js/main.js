@@ -120,3 +120,40 @@ socket.on("disconnect", () => {
 
 // Render the default avatar on the landing page.
 renderAvatar();
+
+
+
+// --------------------------------------------------
+// LOGIN CHECK (virtual identity)
+// --------------------------------------------------
+
+// Ask the server who is logged in. The answer depends on the httpOnly
+// session cookie, which this script cannot read - only the server can.
+// Not logged in -> go to the login page.
+async function requireLogin() {
+  try {
+    const response = await fetch("/api/auth/me");
+
+    if (!response.ok) {
+      window.location.href = "/login.html";
+      return;
+    }
+
+    const user = await response.json();
+
+    // Prefill the nickname with the account's username (can still be changed).
+    nickname.value = user.username;
+
+    const logoutBtn = document.getElementById("logoutBtn");
+    logoutBtn.hidden = false;
+
+    logoutBtn.addEventListener("click", async () => {
+      await fetch("/api/auth/logout", { method: "POST" });
+      window.location.href = "/login.html";
+    });
+  } catch (error) {
+    window.location.href = "/login.html";
+  }
+}
+
+requireLogin();
