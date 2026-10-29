@@ -13,6 +13,8 @@ const authRoutes = require("./routes/auth.routes");
 
 const { rooms } = require("./services/room.service");
 
+const { requireAuth } = require("./middleware/requireAuth");
+
 const app = express();
 
 // Serve the front-end files from the public folder.
@@ -34,7 +36,7 @@ app.get("/api/status", (req, res) => {
 
 // Mount the puzzle routes. Inside puzzle.routes.js the paths are "/" and
 // "/check", so the browser still calls /api/puzzle and /api/puzzle/check.
-app.use("/api/puzzle", puzzleRoutes);
+app.use("/api/puzzle", requireAuth, puzzleRoutes);
 
 app.use("/api/auth", authRoutes);
 
