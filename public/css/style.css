@@ -388,3 +388,21 @@ footer {
   grid-template-columns: minmax(0, 420px);
   justify-content: center;
 }
+
+
+/* Log out button in the top bar */
+.logout-btn {
+  padding: 6px 12px;
+  border: 2px solid #071a64;
+  border-radius: 4px;
+  background: var(--panel-button);
+  color: white;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background: var(--panel-button-hover);
+}
