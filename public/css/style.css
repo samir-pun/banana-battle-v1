@@ -381,3 +381,10 @@ footer {
     height: 128px;
   }
 }
+
+
+/* Login / register page */
+.auth-layout {
+  grid-template-columns: minmax(0, 420px);
+  justify-content: center;
+}
