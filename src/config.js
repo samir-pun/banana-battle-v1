@@ -3,6 +3,14 @@
 // Code generated with AI assistance (Claude, Anthropic), then reviewed
 // and moved into this module by me.
 
+// The session secret signs the login cookie. It comes from the environment
+// (.env file), never from the source code. Refuse to start without it.
+if (!process.env.SESSION_SECRET) {
+  throw new Error(
+    "SESSION_SECRET is not set. Copy .env.example to .env and set a long random value."
+  );
+}
+
 module.exports = {
   PORT: process.env.PORT || 5001,
   MAX_PLAYERS_PER_ROOM: 8,
@@ -12,5 +20,10 @@ module.exports = {
 
   // External Banana Game API (https://marcconrad.com/uob/banana/)
   BANANA_API_URL: "https://marcconrad.com/uob/banana/api.php?out=json",
-  BANANA_API_TIMEOUT: 10000
+  BANANA_API_TIMEOUT: 10000,
+
+  // Login sessions
+  SESSION_SECRET: process.env.SESSION_SECRET,
+  SESSION_MAX_AGE: 24 * 60 * 60 * 1000, // 1 day
+  IS_PRODUCTION: process.env.NODE_ENV === "production"
 };
