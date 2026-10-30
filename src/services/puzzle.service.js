@@ -1,7 +1,6 @@
 // puzzle.service.js - puzzle storage and answer checking.
 // The correct answer stays on the server; the client only receives
 // a puzzle ID and the image URL.
-// Moved from the original server.js, logic unchanged.
 // Code generated with AI assistance (Claude, Anthropic), then reviewed
 // and moved into this module by me.
 
@@ -57,4 +56,13 @@ function checkAnswer(puzzleId, answer) {
   return { correct };
 }
 
-module.exports = { createPuzzle, checkAnswer };
+// A puzzle for a multiplayer round. Unlike createPuzzle(), the answer is
+// handed to the caller (the game engine), which keeps it inside the room on
+// the server and never sends it to browsers.
+async function fetchRoundPuzzle() {
+  const data = await fetchBananaPuzzle();
+
+  return { image: data.question, answer: String(data.solution).trim() };
+}
+
+module.exports = { createPuzzle, checkAnswer, fetchRoundPuzzle };
