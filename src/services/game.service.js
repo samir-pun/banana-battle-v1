@@ -3,8 +3,9 @@
 // A room moves through these states, driven by events and timers:
 //   waiting -> loading -> playing -> between -> (next round) ... -> finished
 //
-// Events the engine EMITS to a room: roundStarted, roundEnded, gameOver
-// (plus playersUpdate through the broadcastPlayers function it is given).
+// Events the engine EMITS to a room: roundStarted, roundEnded, gameOver,
+// playerSolved (plus playersUpdate through the broadcastPlayers function it
+// is given), and guessResult to the player who answered.
 //
 // Code generated with AI assistance (Claude, Anthropic), then reviewed
 // and moved into this module by me.
@@ -193,7 +194,89 @@ function createGameEngine(io, broadcastPlayers, fetchPuzzle = fetchRoundPuzzle) 
     });
   }
 
-  return { startGame, syncPlayer, stopRoom, endRound };
+  // Is every player finished with this round (solved it, or out of lives)?
+  // If so, the round ends early.
+  function checkAllDone(room) {
+    if (room.state !== "playing" || room.players.size === 0) return;
+
+    const everyoneDone = Array.from(room.players.values()).every(
+      (player) => player.solved || player.lives <= 0
+    );
+
+    if (everyoneDone) {
+      endRound(room, "allDone");
+    }
+  }
+
+  // A player submits an answer for the current round.
+  // Events: guessResult (to that player only) and playerSolved (to the room).
+  function submitAnswer(socket, rawAnswer) {
+    const room = rooms.get(socket.data.roomCode);
+    const player = room && room.players.get(socket.id);
+
+    if (!room || !player) return;
+
+    if (room.state !== "playing" || !room.currentPuzzle) {
+      socket.emit("gameError", {
+        message: "There is no puzzle to answer right now."
+      });
+      return;
+    }
+
+    if (player.solved) return;
+
+    if (player.lives <= 0) {
+      socket.emit("gameError", {
+        message: "You are out of lives for this round."
+      });
+      return;
+    }
+
+    // Anything that is not a number is rejected WITHOUT costing a life.
+    const answer = String(rawAnswer ?? "").trim();
+
+    if (!/^\d{1,3}$/.test(answer)) {
+      socket.emit("gameError", { message: "Please enter a number." });
+      return;
+    }
+
+    if (answer === room.currentPuzzle.answer) {
+      const msLeft =
+        ROUND_DURATION_MS - (Date.now() - room.currentPuzzle.startedAt);
+      const livesLost = LIVES_PER_ROUND - player.lives;
+      const points = calculatePoints(msLeft, livesLost);
+
+      player.solved = true;
+      player.score += points;
+      player.solvedCount += 1;
+
+      socket.emit("guessResult", {
+        correct: true,
+        points,
+        lives: player.lives
+      });
+      io.to(room.code).emit("playerSolved", {
+        id: player.id,
+        nickname: player.nickname
+      });
+    } else {
+      player.lives -= 1;
+
+      socket.emit("guessResult", { correct: false, lives: player.lives });
+    }
+
+    broadcastPlayers(room.code);
+    checkAllDone(room);
+  }
+
+  return {
+    startGame,
+    submitAnswer,
+    checkAllDone,
+    syncPlayer,
+    stopRoom,
+    endRound
+  };
 }
 
 module.exports = { calculatePoints, createGameEngine };
