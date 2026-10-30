@@ -1,7 +1,11 @@
 // game.socket.js - all Socket.IO event handling (event-driven programming).
 //
-// Events the server LISTENS for:  createRoom, joinRoom, disconnect
-// Events the server EMITS:        roomCreated, roomJoined, playersUpdate, gameError
+// Events the server LISTENS for:  createRoom, joinRoom, startGame,
+//                                 submitAnswer, disconnect
+// Events the server EMITS:        roomCreated, roomJoined, playersUpdate,
+//                                 gameError, and (from the game engine)
+//                                 roundStarted, roundEnded, playerSolved,
+//                                 guessResult, gameOver
 //
 // Sockets are authenticated: only logged-in users (valid session) may connect.
 //
@@ -16,6 +20,7 @@ const {
   createPlayer,
   getPublicPlayers
 } = require("../services/room.service");
+const { createGameEngine } = require("../services/game.service");
 const { getUserById } = require("../services/user.service");
 const { validateNickname, validateAvatar } = require("../utils/validators");
 
@@ -36,6 +41,9 @@ function registerSocketHandlers(io) {
     });
   }
 
+  // The game engine: rounds, timer, lives and points.
+  const engine = createGameEngine(io, broadcastPlayers);
+
   // Remove a player from their room; delete the room if it becomes empty.
   function removePlayer(socket) {
     const roomCode = socket.data.roomCode;
@@ -53,6 +61,7 @@ function registerSocketHandlers(io) {
     console.log(`Player ${socket.id} left room ${roomCode}`);
 
     if (room.players.size === 0) {
+      engine.stopRoom(room); // cancel its timers before deleting it
       rooms.delete(roomCode);
       console.log(`Room ${roomCode} deleted`);
       return;
@@ -64,6 +73,9 @@ function registerSocketHandlers(io) {
     }
 
     broadcastPlayers(roomCode);
+
+    // The player who left may have been the only one still guessing.
+    engine.checkAllDone(room);
   }
 
   function createRoom(socket, data = {}) {
@@ -157,6 +169,9 @@ function registerSocketHandlers(io) {
 
     socket.emit("roomJoined", { roomCode });
     broadcastPlayers(roomCode);
+
+    // If a round is already running, send the newcomer the current puzzle.
+    engine.syncPlayer(socket, room);
   }
 
   // Authentication for sockets: only logged-in users may connect.
@@ -186,6 +201,16 @@ function registerSocketHandlers(io) {
 
     socket.on("joinRoom", (data) => {
       joinRoom(socket, data);
+    });
+
+    // Host starts the game (the engine checks that the sender is the host).
+    socket.on("startGame", () => {
+      engine.startGame(socket);
+    });
+
+    // A player answers the current puzzle.
+    socket.on("submitAnswer", (data) => {
+      engine.submitAnswer(socket, data && data.answer);
     });
 
     socket.on("disconnect", () => {
