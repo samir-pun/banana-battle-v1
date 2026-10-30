@@ -213,6 +213,11 @@ function registerSocketHandlers(io) {
       engine.submitAnswer(socket, data && data.answer);
     });
 
+
+    socket.on("leaveRoom", () => {
+      removePlayer(socket);
+    });
+
     socket.on("disconnect", () => {
       removePlayer(socket);
       console.log("Player disconnected:", socket.id);
