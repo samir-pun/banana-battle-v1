@@ -1,8 +1,10 @@
 // game.js - the multiplayer game screen.
 // Loads the layout from game.html, then draws it from events sent by the
-// server (playersUpdate, roundStarted, roundEnded). The browser never asks
-// "what changed?": the server pushes updates.
-// main.js owns the socket and forwards the events to the functions below.
+// server (playersUpdate, roundStarted, roundEnded, guessResult,
+// playerSolved). The browser never asks "what changed?": the server pushes
+// updates. main.js owns the socket and forwards the events to the functions
+// below. The server decides everything (answers, lives, points); this file
+// only displays what it is told and sends the player's answers.
 // Code generated with AI assistance (Claude, Anthropic), then reviewed
 // and moved into this module by me.
 
@@ -57,6 +59,25 @@ async function buildGameScreen() {
     socket.emit("startGame");
   });
 
+  // Send the answer. The server checks it; the browser never knows it.
+  el("gsAnswerForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const input = el("gsAnswer");
+    const value = input.value.trim();
+
+    if (value === "") return;
+
+    socket.emit("submitAnswer", { answer: value });
+    input.value = "";
+  });
+
+  // Chat is added in a later step.
+  el("gsChatInput").disabled = true;
+  el("gsChatInput").placeholder = "Chat is coming soon";
+
+  updateAnswerControls();
+
   return screen;
 }
 
@@ -69,6 +90,60 @@ function loadGameScreen() {
   }
 
   return screenPromise;
+}
+
+// --------------------------------------------------
+// STATUS LINE AND FEED
+// --------------------------------------------------
+
+// The line under the round number. kind is "good", "bad" or "" (neutral).
+function setStatus(text, kind = "") {
+  const hint = el("gsHint");
+
+  hint.textContent = text;
+  hint.className = kind ? `gs-hint gs-hint-${kind}` : "gs-hint";
+}
+
+// Add a line to the feed on the right. textContent only, never HTML.
+function addMessage(text, className = "") {
+  const box = el("gsMessages");
+
+  if (!box) return;
+
+  const line = document.createElement("div");
+  line.className = className ? `gs-msg ${className}` : "gs-msg";
+  line.textContent = text;
+
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+// The answer box is only usable while a round is running and this player
+// has not solved it and still has lives. (The server checks this too.)
+function updateAnswerControls() {
+  if (!gameScreen) return;
+
+  const input = el("gsAnswer");
+  const button = el("gsGuessBtn");
+
+  const me =
+    lastRoomState &&
+    lastRoomState.players.find((player) => player.id === socket.id);
+
+  const canAnswer = Boolean(currentRound && me && !me.solved && me.lives > 0);
+
+  input.disabled = !canAnswer;
+  button.disabled = !canAnswer;
+
+  if (canAnswer) {
+    input.placeholder = "Your answer";
+  } else if (me && me.solved) {
+    input.placeholder = "You solved it!";
+  } else if (currentRound && me && me.lives <= 0) {
+    input.placeholder = "Out of lives";
+  } else {
+    input.placeholder = "Waiting...";
+  }
 }
 
 // --------------------------------------------------
@@ -191,9 +266,14 @@ function showPuzzle() {
   puzzle.hidden = false;
   el("gsPlaceholder").hidden = true;
   el("gsOverlay").hidden = true;
-  el("gsHint").textContent = "Solve the banana puzzle!";
 
+  setStatus(`Solve it! You have ${MAX_LIVES} lives.`);
   startClock();
+  updateAnswerControls();
+
+  const input = el("gsAnswer");
+
+  if (!input.disabled) input.focus();
 }
 
 function clearPuzzle() {
@@ -210,6 +290,7 @@ function handleRoundStarted(data) {
   currentRound = data;
   roundEndsAt = Date.now() + data.durationMs;
 
+  addMessage(`Round ${data.round} of ${data.totalRounds} started!`, "gs-msg-system");
   showPuzzle();
 }
 
@@ -226,7 +307,10 @@ function handleRoundEnded(data) {
   timer.textContent = "0";
   timer.classList.remove("gs-urgent");
 
-  el("gsHint").textContent = "Round over";
+  setStatus("Round over");
+  updateAnswerControls();
+  addMessage(`Round ${data.round} over. The answer was ${data.answer}.`, "gs-msg-system");
+
   el("gsOverlayTitle").textContent =
     data.reason === "allDone" ? "Everyone is done!" : "Time's up!";
   el("gsStartBtn").hidden = true;
@@ -252,6 +336,37 @@ function handleRoundEnded(data) {
 
     drawCountdown();
   }, 1000);
+}
+
+// --------------------------------------------------
+// ANSWER RESULTS
+// --------------------------------------------------
+
+// Only the player who answered gets this event.
+function handleGuessResult(data) {
+  if (!gameScreen) return;
+
+  if (data.correct) {
+    setStatus(`Correct! +${data.points} points`, "good");
+  } else if (data.lives > 0) {
+    setStatus(`Wrong! ${data.lives} life left.`, "bad");
+  } else {
+    setStatus("Wrong! You are out of lives for this round.", "bad");
+  }
+}
+
+// Everyone in the room gets this event.
+function handlePlayerSolved(data) {
+  if (!gameScreen) return;
+
+  const who = data.id === socket.id ? "You" : data.nickname;
+
+  addMessage(`${who} solved it!`, "gs-msg-solved");
+}
+
+// Rejected answers and other problems sent by the server.
+function showGameError(text) {
+  setStatus(text, "bad");
 }
 
 // --------------------------------------------------
@@ -290,7 +405,7 @@ function renderOverlay(data) {
   const timer = el("gsTimer");
   timer.textContent = "--";
   timer.classList.remove("gs-urgent");
-  el("gsHint").textContent = "Solve the banana puzzle";
+  setStatus("Solve the banana puzzle");
 
   if (data.state === "loading") {
     title.textContent = "Get ready!";
@@ -332,6 +447,7 @@ function renderRoomState(data) {
 
   renderPlayers(data);
   renderOverlay(data);
+  updateAnswerControls();
 }
 
 // Called by main.js on every "playersUpdate" event. The update can arrive
