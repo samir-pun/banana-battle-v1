@@ -25,5 +25,13 @@ module.exports = {
   // Login sessions
   SESSION_SECRET: process.env.SESSION_SECRET,
   SESSION_MAX_AGE: 24 * 60 * 60 * 1000, // 1 day
-  IS_PRODUCTION: process.env.NODE_ENV === "production"
+  IS_PRODUCTION: process.env.NODE_ENV === "production",
+
+  // Multiplayer game rules
+  ROUNDS_PER_GAME: 5,
+  ROUND_DURATION_MS: 30 * 1000,  // time to solve one puzzle
+  ROUND_GAP_MS: 5 * 1000,        // pause between rounds
+  LIVES_PER_ROUND: 2,            // a wrong guess costs one life
+  MAX_POINTS_PER_ROUND: 100,     // points for solving instantly
+  MIN_POINTS_PER_ROUND: 10       // points for solving at the last moment
 };
