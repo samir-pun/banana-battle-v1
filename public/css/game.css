@@ -329,3 +329,13 @@
     height: 300px;
   }
 }
+/* Status line colours */
+.gs-hint-good {
+  color: #1f8a2e;
+  font-weight: 800;
+}
+
+.gs-hint-bad {
+  color: #c2410c;
+  font-weight: 800;
+}
