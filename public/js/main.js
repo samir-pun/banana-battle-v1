@@ -2,12 +2,13 @@
 // Connects to the server with Socket.IO, handles the create/join room buttons
 // and reacts to events sent by the server (event-driven programming).
 //
-// Events the client EMITS:    createRoom, joinRoom
-// Events the client LISTENS:  roomCreated, roomJoined, gameError,
-//                             connect, connect_error, disconnect
+// Events the client EMITS:    createRoom, joinRoom (here); startGame and
+//                             leaveRoom (from game.js)
+// Events the client LISTENS:  roomCreated, roomJoined, playersUpdate,
+//                             gameError, connect, connect_error, disconnect
 //
 // Moved from the original client.js, logic unchanged apart from the
-// login check and the connect_error handler.
+// login check, the connect_error handler and the playersUpdate listener.
 // Code generated with AI assistance (Claude, Anthropic), then reviewed
 // and moved into this module by me.
 
@@ -89,7 +90,7 @@ document.getElementById("joinBtn")?.addEventListener("click", (event) => {
 
 socket.on("roomCreated", ({ roomCode }) => {
   if (message) {
-    message.textContent = `Room ${roomCode} created! Loading puzzle...`;
+    message.textContent = `Room ${roomCode} created!`;
   }
 
   startGame(roomCode);
@@ -97,11 +98,14 @@ socket.on("roomCreated", ({ roomCode }) => {
 
 socket.on("roomJoined", ({ roomCode }) => {
   if (message) {
-    message.textContent = `Joined room ${roomCode}! Loading puzzle...`;
+    message.textContent = `Joined room ${roomCode}!`;
   }
 
   startGame(roomCode);
 });
+
+// Live list of players, scores and lives, pushed by the server.
+socket.on("playersUpdate", handlePlayersUpdate);
 
 socket.on("gameError", ({ message: errorMessage }) => {
   if (message) {
