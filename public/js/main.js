@@ -107,6 +107,11 @@ socket.on("roomJoined", ({ roomCode }) => {
 // Live list of players, scores and lives, pushed by the server.
 socket.on("playersUpdate", handlePlayersUpdate);
 
+socket.on("roundStarted", handleRoundStarted);
+socket.on("roundEnded", handleRoundEnded);
+
+
+
 socket.on("gameError", ({ message: errorMessage }) => {
   if (message) {
     message.textContent = errorMessage || "Something went wrong.";
