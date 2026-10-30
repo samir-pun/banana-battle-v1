@@ -2,13 +2,15 @@
 // Connects to the server with Socket.IO, handles the create/join room buttons
 // and reacts to events sent by the server (event-driven programming).
 //
-// Events the client EMITS:    createRoom, joinRoom (here); startGame and
-//                             leaveRoom (from game.js)
+// Events the client EMITS:    createRoom, joinRoom (here); startGame,
+//                             submitAnswer and leaveRoom (from game.js)
 // Events the client LISTENS:  roomCreated, roomJoined, playersUpdate,
-//                             gameError, connect, connect_error, disconnect
+//                             roundStarted, roundEnded, guessResult,
+//                             playerSolved, gameError, connect,
+//                             connect_error, disconnect
 //
 // Moved from the original client.js, logic unchanged apart from the
-// login check, the connect_error handler and the playersUpdate listener.
+// login check, the connect_error handler and the game event listeners.
 // Code generated with AI assistance (Claude, Anthropic), then reviewed
 // and moved into this module by me.
 
@@ -104,17 +106,21 @@ socket.on("roomJoined", ({ roomCode }) => {
   startGame(roomCode);
 });
 
-// Live list of players, scores and lives, pushed by the server.
+// Game events pushed by the server. The handlers live in game.js.
 socket.on("playersUpdate", handlePlayersUpdate);
-
 socket.on("roundStarted", handleRoundStarted);
 socket.on("roundEnded", handleRoundEnded);
+socket.on("guessResult", handleGuessResult);
+socket.on("playerSolved", handlePlayerSolved);
 
-
-
+// Errors go to the game screen when it is open, otherwise to the landing page.
 socket.on("gameError", ({ message: errorMessage }) => {
-  if (message) {
-    message.textContent = errorMessage || "Something went wrong.";
+  const text = errorMessage || "Something went wrong.";
+
+  if (gameScreen) {
+    showGameError(text);
+  } else if (message) {
+    message.textContent = text;
   }
 });
 
