@@ -1,5 +1,4 @@
 // config.js - central place for constants.
-// Values moved from the top of the original server.js, unchanged.
 // Code generated with AI assistance (Claude, Anthropic), then reviewed
 // and moved into this module by me.
 
@@ -27,10 +26,11 @@ module.exports = {
   SESSION_MAX_AGE: 24 * 60 * 60 * 1000, // 1 day
   IS_PRODUCTION: process.env.NODE_ENV === "production",
 
-  // Multiplayer game rules
-  ROUNDS_PER_GAME: 5,
-  ROUND_DURATION_MS: 30 * 1000,  // time to solve one puzzle
-  ROUND_GAP_MS: 5 * 1000,        // pause between rounds
+  // Multiplayer game rules. The three timing values can be overridden with
+  // environment variables so the tests can run in a fraction of a second.
+  ROUNDS_PER_GAME: Number(process.env.ROUNDS_PER_GAME) || 5,
+  ROUND_DURATION_MS: Number(process.env.ROUND_DURATION_MS) || 30 * 1000,
+  ROUND_GAP_MS: Number(process.env.ROUND_GAP_MS) || 5 * 1000,
   LIVES_PER_ROUND: 2,            // a wrong guess costs one life
   MAX_POINTS_PER_ROUND: 100,     // points for solving instantly
   MIN_POINTS_PER_ROUND: 10       // points for solving at the last moment
