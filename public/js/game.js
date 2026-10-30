@@ -1,7 +1,7 @@
 // game.js - the multiplayer game screen.
 // Loads the layout from game.html, then draws it from events sent by the
-// server (playersUpdate, and later roundStarted, roundEnded and so on).
-// The browser never asks "what changed?": the server pushes updates.
+// server (playersUpdate, roundStarted, roundEnded). The browser never asks
+// "what changed?": the server pushes updates.
 // main.js owns the socket and forwards the events to the functions below.
 // Code generated with AI assistance (Claude, Anthropic), then reviewed
 // and moved into this module by me.
@@ -14,6 +14,10 @@ let screenPromise = null;   // so the screen is only built once
 let gameTemplate = null;    // cached text of game.html
 let currentRoomCode = null;
 let lastRoomState = null;   // latest playersUpdate from the server
+let currentRound = null;    // latest roundStarted, while a round is running
+let roundEndsAt = 0;        // when the running round ends (browser clock)
+let clockTimer = null;      // updates the countdown number
+let gapTimer = null;        // counts down the pause between rounds
 
 function el(id) {
   return document.getElementById(id);
@@ -142,7 +146,116 @@ function renderPlayers(data) {
 }
 
 // --------------------------------------------------
-// HEADER AND START OVERLAY
+// TIMER
+// --------------------------------------------------
+
+function stopClock() {
+  clearInterval(clockTimer);
+  clockTimer = null;
+}
+
+function stopGapTimer() {
+  clearInterval(gapTimer);
+  gapTimer = null;
+}
+
+function updateClock() {
+  const secondsLeft = Math.max(
+    0,
+    Math.ceil((roundEndsAt - Date.now()) / 1000)
+  );
+  const timer = el("gsTimer");
+
+  timer.textContent = String(secondsLeft);
+  timer.classList.toggle("gs-urgent", secondsLeft <= 5);
+
+  if (secondsLeft <= 0) stopClock();
+}
+
+function startClock() {
+  stopClock();
+  updateClock();
+  clockTimer = setInterval(updateClock, 200);
+}
+
+// --------------------------------------------------
+// PUZZLE
+// --------------------------------------------------
+
+function showPuzzle() {
+  if (!gameScreen || !currentRound) return;
+
+  const puzzle = el("gsPuzzle");
+
+  puzzle.src = currentRound.image;
+  puzzle.hidden = false;
+  el("gsPlaceholder").hidden = true;
+  el("gsOverlay").hidden = true;
+  el("gsHint").textContent = "Solve the banana puzzle!";
+
+  startClock();
+}
+
+function clearPuzzle() {
+  el("gsPuzzle").hidden = true;
+  el("gsPuzzle").removeAttribute("src");
+  el("gsPlaceholder").hidden = false;
+}
+
+// Called by main.js on "roundStarted". It can arrive before the screen has
+// finished loading, so it is stored and shown once the screen is ready.
+function handleRoundStarted(data) {
+  stopGapTimer();
+
+  currentRound = data;
+  roundEndsAt = Date.now() + data.durationMs;
+
+  showPuzzle();
+}
+
+// Called by main.js on "roundEnded": the answer is revealed now, and a short
+// countdown shows when the next round (or the final result) comes.
+function handleRoundEnded(data) {
+  currentRound = null;
+  stopClock();
+  stopGapTimer();
+
+  if (!gameScreen) return;
+
+  const timer = el("gsTimer");
+  timer.textContent = "0";
+  timer.classList.remove("gs-urgent");
+
+  el("gsHint").textContent = "Round over";
+  el("gsOverlayTitle").textContent =
+    data.reason === "allDone" ? "Everyone is done!" : "Time's up!";
+  el("gsStartBtn").hidden = true;
+  el("gsOverlay").hidden = false;
+
+  let secondsLeft = Math.ceil(data.gapMs / 1000);
+  const nextLabel = data.isLastRound ? "Final results" : "Next round";
+
+  function drawCountdown() {
+    el("gsOverlayText").textContent =
+      `The answer was ${data.answer}. ${nextLabel} in ${secondsLeft}...`;
+  }
+
+  drawCountdown();
+
+  gapTimer = setInterval(() => {
+    secondsLeft -= 1;
+
+    if (secondsLeft <= 0) {
+      stopGapTimer();
+      return;
+    }
+
+    drawCountdown();
+  }, 1000);
+}
+
+// --------------------------------------------------
+// HEADER AND OVERLAY
 // --------------------------------------------------
 
 function renderOverlay(data) {
@@ -151,18 +264,56 @@ function renderOverlay(data) {
   const text = el("gsOverlayText");
   const startBtn = el("gsStartBtn");
 
-  const waiting = data.state === "waiting" || data.state === "finished";
+  // Between rounds, handleRoundEnded owns the overlay (answer and countdown).
+  // Someone who joined during the pause still sees a message.
+  if (data.state === "between") {
+    if (overlay.hidden) {
+      title.textContent = "Round over";
+      text.textContent = "The next round starts in a moment...";
+      startBtn.hidden = true;
+      overlay.hidden = false;
+    }
 
-  overlay.hidden = !waiting;
+    return;
+  }
 
-  if (!waiting) return;
+  if (data.state === "playing") {
+    overlay.hidden = true;
+    return;
+  }
+
+  // waiting, loading or finished: no puzzle is on screen.
+  stopClock();
+  clearPuzzle();
+  overlay.hidden = false;
+
+  const timer = el("gsTimer");
+  timer.textContent = "--";
+  timer.classList.remove("gs-urgent");
+  el("gsHint").textContent = "Solve the banana puzzle";
+
+  if (data.state === "loading") {
+    title.textContent = "Get ready!";
+    text.textContent = "Loading the next puzzle...";
+    startBtn.hidden = true;
+    return;
+  }
 
   const isHost = data.hostId === socket.id;
 
-  title.textContent =
-    data.state === "finished" ? "Game finished" : "Waiting for players";
+  if (data.state === "finished") {
+    const winner = data.players[0];
 
-  text.textContent = isHost
+    title.textContent = "Game finished!";
+    text.textContent = winner
+      ? `Winner: ${winner.nickname} with ${winner.score} points. `
+      : "";
+  } else {
+    title.textContent = "Waiting for players";
+    text.textContent = "";
+  }
+
+  text.textContent += isHost
     ? `Room code: ${data.roomCode}. Share it with your friends, then start.`
     : `Room code: ${data.roomCode}. Waiting for the host to start the game.`;
 
@@ -204,6 +355,11 @@ async function startGame(code) {
     if (lastRoomState) {
       renderRoomState(lastRoomState);
     }
+
+    // Joined while a round was already running.
+    if (currentRound) {
+      showPuzzle();
+    }
   } catch (error) {
     if (message) {
       message.textContent = error.message;
@@ -214,6 +370,9 @@ async function startGame(code) {
 function leaveGame() {
   socket.emit("leaveRoom");
 
+  stopClock();
+  stopGapTimer();
+
   if (gameScreen) {
     gameScreen.remove();
   }
@@ -221,6 +380,7 @@ function leaveGame() {
   gameScreen = null;
   screenPromise = null;
   lastRoomState = null;
+  currentRound = null;
   currentRoomCode = null;
 
   if (message) {
