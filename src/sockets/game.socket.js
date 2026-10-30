@@ -5,18 +5,22 @@
 //
 // Sockets are authenticated: only logged-in users (valid session) may connect.
 //
-// Moved from the original server.js, logic unchanged apart from the
-// authentication check at the bottom.
 // Code generated with AI assistance (Claude, Anthropic), then reviewed
 // and moved into this module by me.
 
-const { MAX_PLAYERS_PER_ROOM } = require("../config");
-const { rooms, generateRoomCode } = require("../services/room.service");
+const { MAX_PLAYERS_PER_ROOM, ROUNDS_PER_GAME } = require("../config");
+const {
+  rooms,
+  generateRoomCode,
+  createRoomState,
+  createPlayer,
+  getPublicPlayers
+} = require("../services/room.service");
 const { getUserById } = require("../services/user.service");
 const { validateNickname, validateAvatar } = require("../utils/validators");
 
 function registerSocketHandlers(io) {
-  // Send the current player list to everyone in a room.
+  // Send the current room state (players, ranking, round) to everyone in a room.
   function broadcastPlayers(roomCode) {
     const room = rooms.get(roomCode);
 
@@ -24,11 +28,11 @@ function registerSocketHandlers(io) {
 
     io.to(roomCode).emit("playersUpdate", {
       roomCode,
-      players: Array.from(room.players.values()).map((player) => ({
-        id: player.id,
-        nickname: player.nickname,
-        avatar: player.avatar
-      }))
+      hostId: room.hostId,
+      state: room.state,
+      round: room.round,
+      totalRounds: ROUNDS_PER_GAME,
+      players: getPublicPlayers(room)
     });
   }
 
@@ -54,6 +58,11 @@ function registerSocketHandlers(io) {
       return;
     }
 
+    // If the host left, the next player becomes the host.
+    if (room.hostId === socket.id) {
+      room.hostId = room.players.keys().next().value;
+    }
+
     broadcastPlayers(roomCode);
   }
 
@@ -70,20 +79,14 @@ function registerSocketHandlers(io) {
     removePlayer(socket);
 
     const roomCode = generateRoomCode();
-
-    const room = {
-      code: roomCode,
-      players: new Map(),
-      createdAt: Date.now()
-    };
+    const room = createRoomState(roomCode, socket.id);
 
     rooms.set(roomCode, room);
 
-    room.players.set(socket.id, {
-      id: socket.id,
-      nickname,
-      avatar: validateAvatar(data.avatar)
-    });
+    room.players.set(
+      socket.id,
+      createPlayer(socket, nickname, validateAvatar(data.avatar))
+    );
 
     socket.join(roomCode);
     socket.data.roomCode = roomCode;
@@ -142,11 +145,10 @@ function registerSocketHandlers(io) {
 
     removePlayer(socket);
 
-    room.players.set(socket.id, {
-      id: socket.id,
-      nickname,
-      avatar: validateAvatar(data.avatar)
-    });
+    room.players.set(
+      socket.id,
+      createPlayer(socket, nickname, validateAvatar(data.avatar))
+    );
 
     socket.join(roomCode);
     socket.data.roomCode = roomCode;
