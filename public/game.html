@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banana Battle - Game</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/game.css">
+</head>
+<body>
+  <!-- Game screen. Layout modelled on skribbl.io:
+       top bar (timer, round), players on the left, puzzle in the middle,
+       chat and answer box on the right. The sample content below is
+       replaced by game.js when the game runs. -->
+  <section id="gameScreen" class="gs-screen">
+    <div class="gs-wrap">
+
+      <header class="gs-top gs-card">
+        <div id="gsTimer" class="gs-timer">30</div>
+
+        <div class="gs-round">
+          <div id="gsRound" class="gs-round-label">Round 1 of 5</div>
+          <div id="gsHint" class="gs-hint">Solve the banana puzzle</div>
+        </div>
+
+        <div class="gs-top-right">
+          <span id="gsRoom">Room ABC123</span>
+          <button id="gsLeaveBtn" class="gs-btn" type="button">Leave</button>
+        </div>
+      </header>
+
+      <div class="gs-main">
+
+        <!-- Players -->
+        <aside id="gsPlayers" class="gs-players gs-card" aria-label="Players">
+          <div class="gs-player gs-solved">
+            <span class="gs-rank">#1</span>
+            <div class="gs-avatar">
+              <div class="avatar-layer avatar-color"></div>
+              <div class="avatar-layer avatar-eyes"></div>
+              <div class="avatar-layer avatar-mouth"></div>
+            </div>
+            <div class="gs-player-info">
+              <div class="gs-name">kankeraap</div>
+              <div class="gs-points">650 points</div>
+            </div>
+            <div class="gs-hearts">
+              <span class="gs-heart">♥</span><span class="gs-heart">♥</span>
+            </div>
+          </div>
+
+          <div class="gs-player gs-you">
+            <span class="gs-rank">#2</span>
+            <div class="gs-avatar">
+              <div class="avatar-layer avatar-color"></div>
+              <div class="avatar-layer avatar-eyes"></div>
+              <div class="avatar-layer avatar-mouth"></div>
+            </div>
+            <div class="gs-player-info">
+              <div class="gs-name">samir (You)</div>
+              <div class="gs-points">130 points</div>
+            </div>
+            <div class="gs-hearts">
+              <span class="gs-heart">♥</span><span class="gs-heart gs-heart-lost">♥</span>
+            </div>
+          </div>
+
+          <div class="gs-player gs-out">
+            <span class="gs-rank">#3</span>
+            <div class="gs-avatar">
+              <div class="avatar-layer avatar-color"></div>
+              <div class="avatar-layer avatar-eyes"></div>
+              <div class="avatar-layer avatar-mouth"></div>
+            </div>
+            <div class="gs-player-info">
+              <div class="gs-name">alex</div>
+              <div class="gs-points">75 points</div>
+            </div>
+            <div class="gs-hearts">
+              <span class="gs-heart gs-heart-lost">♥</span><span class="gs-heart gs-heart-lost">♥</span>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Puzzle -->
+        <section class="gs-stage gs-card">
+          <div id="gsPlaceholder" class="gs-placeholder">🍌 The puzzle appears here</div>
+          <img id="gsPuzzle" class="gs-puzzle" alt="Banana puzzle" hidden>
+
+          <div id="gsOverlay" class="gs-overlay" hidden>
+            <h2 id="gsOverlayTitle">Waiting for players</h2>
+            <p id="gsOverlayText">Share the room code with your friends.</p>
+            <button id="gsStartBtn" class="gs-btn gs-btn-primary" type="button">
+              Start game
+            </button>
+          </div>
+        </section>
+
+        <!-- Chat and answer box -->
+        <aside class="gs-chat gs-card">
+          <div id="gsMessages" class="gs-messages" aria-live="polite">
+            <div class="gs-msg gs-msg-system">alex joined the room!</div>
+            <div class="gs-msg"><strong>alex:</strong> good luck everyone</div>
+            <div class="gs-msg gs-msg-solved">kankeraap solved it!</div>
+            <div class="gs-msg gs-msg-left">alex left the room!</div>
+          </div>
+
+          <div class="gs-forms">
+            <form id="gsAnswerForm" class="gs-form">
+              <input
+                id="gsAnswer"
+                type="number"
+                step="1"
+                inputmode="numeric"
+                placeholder="Your answer"
+                autocomplete="off"
+              >
+              <button id="gsGuessBtn" class="gs-btn gs-btn-primary" type="submit">
+                Guess
+              </button>
+            </form>
+
+            <form id="gsChatForm" class="gs-form">
+              <input
+                id="gsChatInput"
+                type="text"
+                maxlength="120"
+                placeholder="Chat with the room..."
+                autocomplete="off"
+              >
+            </form>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </section>
+</body>
+</html>

@@ -3,6 +3,7 @@
 //   POST /api/auth/login     -> check password and log in
 //   POST /api/auth/logout    -> destroy the session
 //   GET  /api/auth/me        -> current user, or 401 if not logged in
+// Register and login are rate limited (see middleware/rateLimit.js).
 // Code generated with AI assistance (Claude, Anthropic), then reviewed
 // and moved into this module by me.
 
@@ -12,6 +13,7 @@ const {
   verifyUser,
   getUserById
 } = require("../services/user.service");
+const { loginLimiter, registerLimiter } = require("../middleware/rateLimit");
 
 const router = express.Router();
 
@@ -33,7 +35,7 @@ function logIn(req, user) {
   });
 }
 
-router.post("/register", async (req, res) => {
+router.post("/register", registerLimiter, async (req, res) => {
   const { username, password } = req.body || {};
 
   try {
@@ -55,7 +57,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
   const { username, password } = req.body || {};
 
   try {

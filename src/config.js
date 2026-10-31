@@ -1,5 +1,4 @@
 // config.js - central place for constants.
-// Values moved from the top of the original server.js, unchanged.
 // Code generated with AI assistance (Claude, Anthropic), then reviewed
 // and moved into this module by me.
 
@@ -25,5 +24,20 @@ module.exports = {
   // Login sessions
   SESSION_SECRET: process.env.SESSION_SECRET,
   SESSION_MAX_AGE: 24 * 60 * 60 * 1000, // 1 day
-  IS_PRODUCTION: process.env.NODE_ENV === "production"
+  IS_PRODUCTION: process.env.NODE_ENV === "production",
+
+  // Rate limit for login and register: at most AUTH_MAX_ATTEMPTS requests
+  // per address in each AUTH_WINDOW_MS. Both can be overridden with
+  // environment variables, which makes the limit easy to test.
+  AUTH_WINDOW_MS: Number(process.env.AUTH_WINDOW_MS) || 15 * 60 * 1000,
+  AUTH_MAX_ATTEMPTS: Number(process.env.AUTH_MAX_ATTEMPTS) || 10,
+
+  // Multiplayer game rules. The three timing values can be overridden with
+  // environment variables so the tests can run in a fraction of a second.
+  ROUNDS_PER_GAME: Number(process.env.ROUNDS_PER_GAME) || 5,
+  ROUND_DURATION_MS: Number(process.env.ROUND_DURATION_MS) || 30 * 1000,
+  ROUND_GAP_MS: Number(process.env.ROUND_GAP_MS) || 5 * 1000,
+  LIVES_PER_ROUND: 2,            // a wrong guess costs one life
+  MAX_POINTS_PER_ROUND: 100,     // points for solving instantly
+  MIN_POINTS_PER_ROUND: 10       // points for solving at the last moment
 };
