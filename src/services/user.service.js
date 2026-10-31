@@ -12,10 +12,16 @@ const Database = require("better-sqlite3");
 // Cost factor: each +1 doubles the time needed to compute (and to brute-force) a hash.
 const BCRYPT_ROUNDS = 12;
 
-const DATA_DIR = path.join(__dirname, "..", "..", "data");
-fs.mkdirSync(DATA_DIR, { recursive: true });
+// Tests set DATABASE_PATH=:memory: so they never touch the real database.
+const DATABASE_PATH =
+  process.env.DATABASE_PATH ||
+  path.join(__dirname, "..", "..", "data", "banana.db");
 
-const db = new Database(path.join(DATA_DIR, "banana.db"));
+if (DATABASE_PATH !== ":memory:") {
+  fs.mkdirSync(path.dirname(DATABASE_PATH), { recursive: true });
+}
+
+const db = new Database(DATABASE_PATH);
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
