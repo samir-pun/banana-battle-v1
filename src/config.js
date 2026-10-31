@@ -26,6 +26,12 @@ module.exports = {
   SESSION_MAX_AGE: 24 * 60 * 60 * 1000, // 1 day
   IS_PRODUCTION: process.env.NODE_ENV === "production",
 
+  // Rate limit for login and register: at most AUTH_MAX_ATTEMPTS requests
+  // per address in each AUTH_WINDOW_MS. Both can be overridden with
+  // environment variables, which makes the limit easy to test.
+  AUTH_WINDOW_MS: Number(process.env.AUTH_WINDOW_MS) || 15 * 60 * 1000,
+  AUTH_MAX_ATTEMPTS: Number(process.env.AUTH_MAX_ATTEMPTS) || 10,
+
   // Multiplayer game rules. The three timing values can be overridden with
   // environment variables so the tests can run in a fraction of a second.
   ROUNDS_PER_GAME: Number(process.env.ROUNDS_PER_GAME) || 5,
