@@ -339,3 +339,16 @@
   color: #c2410c;
   font-weight: 800;
 }
+
+/* Chat between players who have already solved the puzzle */
+.gs-msg-private {
+  background: #e6f7df !important;
+  font-style: italic;
+}
+
+.gs-msg-private::before {
+  content: "✔ solved chat: ";
+  color: #1f8a2e;
+  font-style: normal;
+  font-weight: 800;
+}
