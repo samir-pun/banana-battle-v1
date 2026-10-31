@@ -113,6 +113,10 @@ socket.on("roundEnded", handleRoundEnded);
 socket.on("guessResult", handleGuessResult);
 socket.on("playerSolved", handlePlayerSolved);
 
+socket.on("chatMessage", handleChatMessage);
+socket.on("systemMessage", handleSystemMessage);
+
+
 // Errors go to the game screen when it is open, otherwise to the landing page.
 socket.on("gameError", ({ message: errorMessage }) => {
   const text = errorMessage || "Something went wrong.";
