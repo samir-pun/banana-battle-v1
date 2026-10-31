@@ -1,11 +1,13 @@
 // game.socket.js - all Socket.IO event handling (event-driven programming).
 //
 // Events the server LISTENS for:  createRoom, joinRoom, startGame,
-//                                 submitAnswer, disconnect
+//                                 submitAnswer, chatMessage, leaveRoom,
+//                                 disconnect
 // Events the server EMITS:        roomCreated, roomJoined, playersUpdate,
-//                                 gameError, and (from the game engine)
-//                                 roundStarted, roundEnded, playerSolved,
-//                                 guessResult, gameOver
+//                                 systemMessage, chatMessage, gameError, and
+//                                 (from the game engine) roundStarted,
+//                                 roundEnded, playerSolved, guessResult,
+//                                 gameOver
 //
 // Sockets are authenticated: only logged-in users (valid session) may connect.
 //
@@ -23,6 +25,11 @@ const {
 const { createGameEngine } = require("../services/game.service");
 const { getUserById } = require("../services/user.service");
 const { validateNickname, validateAvatar } = require("../utils/validators");
+
+// Chat limits: short messages, and no flooding.
+const CHAT_MAX_LENGTH = 120;
+const CHAT_WINDOW_MS = 10 * 1000;
+const CHAT_MAX_PER_WINDOW = 5;
 
 function registerSocketHandlers(io) {
   // Send the current room state (players, ranking, round) to everyone in a room.
@@ -55,6 +62,8 @@ function registerSocketHandlers(io) {
 
     if (!room) return;
 
+    const leaving = room.players.get(socket.id);
+
     room.players.delete(socket.id);
     socket.leave(roomCode);
 
@@ -70,6 +79,13 @@ function registerSocketHandlers(io) {
     // If the host left, the next player becomes the host.
     if (room.hostId === socket.id) {
       room.hostId = room.players.keys().next().value;
+    }
+
+    if (leaving) {
+      io.to(roomCode).emit("systemMessage", {
+        text: `${leaving.nickname} left the room.`,
+        kind: "leave"
+      });
     }
 
     broadcastPlayers(roomCode);
@@ -168,10 +184,71 @@ function registerSocketHandlers(io) {
     console.log(`${nickname} joined room ${roomCode}`);
 
     socket.emit("roomJoined", { roomCode });
+
+    // Tell everyone else in the room (not the player who just joined).
+    socket.to(roomCode).emit("systemMessage", {
+      text: `${nickname} joined the room.`,
+      kind: "join"
+    });
+
     broadcastPlayers(roomCode);
 
     // If a round is already running, send the newcomer the current puzzle.
     engine.syncPlayer(socket, room);
+  }
+
+  // A chat message from a player.
+  // The sender's name comes from the server-side player record (which was
+  // built from the login session), never from the message itself.
+  function chat(socket, data) {
+    const room = rooms.get(socket.data.roomCode);
+    const player = room && room.players.get(socket.id);
+
+    if (!room || !player) return;
+
+    const text = typeof data?.text === "string" ? data.text.trim() : "";
+
+    if (!text) return;
+
+    if (text.length > CHAT_MAX_LENGTH) {
+      socket.emit("gameError", {
+        message: `Messages can be at most ${CHAT_MAX_LENGTH} characters.`
+      });
+      return;
+    }
+
+    // Rate limit: at most CHAT_MAX_PER_WINDOW messages per window.
+    const now = Date.now();
+    const recent = (socket.data.chatTimes || []).filter(
+      (time) => now - time < CHAT_WINDOW_MS
+    );
+
+    if (recent.length >= CHAT_MAX_PER_WINDOW) {
+      socket.emit("gameError", {
+        message: "You are sending messages too fast. Please slow down."
+      });
+      return;
+    }
+
+    recent.push(now);
+    socket.data.chatTimes = recent;
+
+    const message = { id: player.id, nickname: player.nickname, text };
+
+    // While a round is running, a player who has solved the puzzle may only
+    // talk to other players who have solved it, so the answer cannot leak.
+    const solvedOnly = room.state === "playing" && player.solved;
+
+    if (!solvedOnly) {
+      io.to(room.code).emit("chatMessage", message);
+      return;
+    }
+
+    for (const other of room.players.values()) {
+      if (other.solved) {
+        io.to(other.id).emit("chatMessage", { ...message, private: true });
+      }
+    }
   }
 
   // Authentication for sockets: only logged-in users may connect.
@@ -213,7 +290,12 @@ function registerSocketHandlers(io) {
       engine.submitAnswer(socket, data && data.answer);
     });
 
+    // A player sends a chat message.
+    socket.on("chatMessage", (data) => {
+      chat(socket, data);
+    });
 
+    // A player leaves the room on purpose (Leave button).
     socket.on("leaveRoom", () => {
       removePlayer(socket);
     });
