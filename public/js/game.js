@@ -1,10 +1,11 @@
 // game.js - the multiplayer game screen.
 // Loads the layout from game.html, then draws it from events sent by the
 // server (playersUpdate, roundStarted, roundEnded, guessResult,
-// playerSolved). The browser never asks "what changed?": the server pushes
-// updates. main.js owns the socket and forwards the events to the functions
-// below. The server decides everything (answers, lives, points); this file
-// only displays what it is told and sends the player's answers.
+// playerSolved, chatMessage, systemMessage). The browser never asks "what
+// changed?": the server pushes updates. main.js owns the socket and forwards
+// the events to the functions below. The server decides everything (answers,
+// lives, points, who may see which chat message); this file only displays
+// what it is told and sends the player's answers and messages.
 // Code generated with AI assistance (Claude, Anthropic), then reviewed
 // and moved into this module by me.
 
@@ -72,9 +73,18 @@ async function buildGameScreen() {
     input.value = "";
   });
 
-  // Chat is added in a later step.
-  el("gsChatInput").disabled = true;
-  el("gsChatInput").placeholder = "Chat is coming soon";
+  // Send a chat message. The server decides who may see it.
+  el("gsChatForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const input = el("gsChatInput");
+    const value = input.value.trim();
+
+    if (value === "") return;
+
+    socket.emit("chatMessage", { text: value });
+    input.value = "";
+  });
 
   updateAnswerControls();
 
@@ -116,6 +126,30 @@ function addMessage(text, className = "") {
 
   box.appendChild(line);
   box.scrollTop = box.scrollHeight;
+}
+
+// Called by main.js on "chatMessage". Private messages (between players who
+// have solved the puzzle) only ever arrive at players allowed to see them.
+function handleChatMessage(data) {
+  if (!gameScreen) return;
+
+  const box = el("gsMessages");
+  const line = document.createElement("div");
+  const name = document.createElement("strong");
+
+  line.className = data.private ? "gs-msg gs-msg-private" : "gs-msg";
+  name.textContent = data.id === socket.id ? "You" : data.nickname;
+
+  // The text is added as a text node, so it can never run as HTML.
+  line.append(name, document.createTextNode(`: ${data.text}`));
+
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+// Called by main.js on "systemMessage" (someone joined or left).
+function handleSystemMessage(data) {
+  addMessage(data.text, data.kind === "leave" ? "gs-msg-left" : "gs-msg-system");
 }
 
 // The answer box is only usable while a round is running and this player
