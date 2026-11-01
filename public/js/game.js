@@ -349,6 +349,7 @@ function handleRoundEnded(data) {
     data.reason === "allDone" ? "Everyone is done!" : "Time's up!";
   el("gsStartBtn").hidden = true;
   el("gsOverlay").hidden = false;
+  renderRoundResults(data.results);
 
   let secondsLeft = Math.ceil(data.gapMs / 1000);
   const nextLabel = data.isLastRound ? "Final results" : "Next round";
@@ -425,6 +426,8 @@ function renderOverlay(data) {
 
     return;
   }
+
+  hideRoundResults();
 
   if (data.state === "playing") {
     overlay.hidden = true;

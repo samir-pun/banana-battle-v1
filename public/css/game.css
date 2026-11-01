@@ -352,3 +352,46 @@
   font-style: normal;
   font-weight: 800;
 }
+
+/* Round results during the pause between rounds */
+.gs-results {
+  list-style: none;
+  width: 100%;
+  max-width: 340px;
+  max-height: 210px;
+  margin: 4px 0;
+  padding: 0;
+  overflow-y: auto;
+  font-size: 18px;
+  text-align: left;
+}
+
+.gs-result-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  color: #fff;
+}
+
+.gs-result-you {
+  background: rgba(255, 255, 255, 0.18);
+  font-weight: 800;
+}
+
+.gs-result-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gs-result-points {
+  color: #7dff45;
+  font-weight: 900;
+}
+
+.gs-result-zero {
+  color: #aab6cc;
+}
