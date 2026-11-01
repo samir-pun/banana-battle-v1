@@ -48,7 +48,9 @@ Run the automated tests with `npm test`.
    a life gives half points.
 6. A round ends when the timer runs out or everyone is done. After a
    5-second pause the next round starts. The player with the most points
-   after the last round wins.
+   after the last round wins. During each pause you see the points every
+   player earned in that round, and at the end a podium shows the final
+   ranking.
 7. Use the chat to talk to the room. Once you have solved a puzzle, your
    messages only reach other players who have solved it, so nobody can give
    the answer away.
@@ -83,7 +85,7 @@ public/
   login.html           log in / create account
   game.html            layout of the game screen
   css/                 style.css, game.css
-  js/                  avatar.js, auth.js, game.js, main.js
+  js/                  avatar.js, auth.js, game.js, results.js, podium.js, main.js
   image/avatar/        avatar sprite atlases
 tests/                 automated tests (node --test)
 ```
