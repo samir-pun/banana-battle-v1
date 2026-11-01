@@ -49,6 +49,7 @@ function createPlayer(socket, nickname, avatar) {
     nickname,
     avatar,
     score: 0,
+    roundPoints: 0,          // points earned in the current round
     solvedCount: 0,          // puzzles solved in this game (used for tie-breaks)
     lives: LIVES_PER_ROUND,  // reset at the start of every round
     solved: false            // solved the current round?
