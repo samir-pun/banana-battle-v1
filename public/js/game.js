@@ -428,6 +428,7 @@ function renderOverlay(data) {
   }
 
   hideRoundResults();
+  hidePodium();
 
   if (data.state === "playing") {
     overlay.hidden = true;
@@ -457,6 +458,8 @@ function renderOverlay(data) {
     const winner = data.players[0];
 
     title.textContent = "Game finished!";
+    renderPodium(data);
+    overlay.hidden = true;
     text.textContent = winner
       ? `Winner: ${winner.nickname} with ${winner.score} points. `
       : "";
