@@ -40,6 +40,19 @@ function calculatePoints(msLeft, livesLost) {
   return points;
 }
 
+// Points each player earned in the round that just ended, highest first.
+// Players who did not solve it earn 0.
+function getRoundResults(room) {
+  return Array.from(room.players.values())
+    .map((player) => ({
+      id: player.id,
+      nickname: player.nickname,
+      points: player.roundPoints || 0,
+      solved: player.solved
+    }))
+    .sort((a, b) => b.points - a.points);
+}
+
 // The engine is created with the things it depends on, so a test can give it
 // a fake io and a fake puzzle fetcher (dependency injection).
 function createGameEngine(io, broadcastPlayers, fetchPuzzle = fetchRoundPuzzle) {
@@ -96,6 +109,7 @@ function createGameEngine(io, broadcastPlayers, fetchPuzzle = fetchRoundPuzzle) 
       player.lives = LIVES_PER_ROUND;
       player.solved = false;
       player.wrongGuesses = 0;
+      player.roundPoints = 0;
     }
 
     broadcastPlayers(room.code);
@@ -156,6 +170,7 @@ function createGameEngine(io, broadcastPlayers, fetchPuzzle = fetchRoundPuzzle) 
       answer: room.currentPuzzle.answer,
       reason,
       gapMs: ROUND_GAP_MS,
+      results: getRoundResults(room),
       isLastRound
     });
     broadcastPlayers(room.code);
@@ -248,6 +263,7 @@ function createGameEngine(io, broadcastPlayers, fetchPuzzle = fetchRoundPuzzle) 
 
       player.solved = true;
       player.score += points;
+      player.roundPoints = points;
       player.solvedCount += 1;
 
       socket.emit("guessResult", {
