@@ -209,3 +209,26 @@ test("faster answers score more and losing a life halves the points", () => {
   assert.strictEqual(calculatePoints(60, 1), 50);
   assert.strictEqual(calculatePoints(0, 0), 10);
 });
+test("the round results list the points each player earned, highest first", async () => {
+  const { engine, room, sockets, events } = await setupRound("TEST06", [
+    "sam",
+    "alex"
+  ]);
+
+  engine.submitAnswer(sockets.s1, "7"); // sam solves it
+  engine.submitAnswer(sockets.s2, "1"); // alex guesses wrong twice...
+  engine.submitAnswer(sockets.s2, "2"); // ...and is out of lives
+
+  const ended = events.find((event) => event.name === "roundEnded");
+
+  assert.ok(ended, "the round should have ended");
+  assert.deepStrictEqual(
+    ended.data.results.map((result) => result.nickname),
+    ["sam", "alex"]
+  );
+  assert.ok(ended.data.results[0].points > 0);
+  assert.strictEqual(ended.data.results[1].points, 0);
+  assert.strictEqual(ended.data.results[1].solved, false);
+
+  engine.stopRoom(room);
+});
