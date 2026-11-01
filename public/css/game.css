@@ -395,3 +395,164 @@
 .gs-result-zero {
   color: #aab6cc;
 }
+
+/* Final podium (shown when the game is finished) */
+.gs-podium {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 12px;
+  overflow-y: auto;
+  background: #383a47;
+  color: #fff;
+  text-align: center;
+}
+
+.gs-pod-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.gs-pod-winner {
+  color: #ffe0a8;
+}
+
+.gs-pod-stage {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.gs-pod-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 120px;
+}
+
+.gs-pod-figure {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding-top: 30px;
+}
+
+.gs-pod-avatar {
+  width: 84px;
+  height: 84px;
+  border-radius: 10px;
+}
+
+.gs-pod-1 .gs-pod-avatar {
+  width: 104px;
+  height: 104px;
+}
+
+.gs-pod-crown {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) rotate(-12deg);
+  font-size: 34px;
+}
+
+.gs-pod-trophy {
+  position: absolute;
+  right: -34px;
+  bottom: -6px;
+  font-size: 44px;
+}
+
+.gs-pod-block {
+  width: 100%;
+  padding: 8px 6px;
+  border: 4px solid;
+  border-bottom: 0;
+  border-radius: 14px 14px 0 0;
+  font-weight: 800;
+}
+
+.gs-pod-1 .gs-pod-block {
+  height: 120px;
+  border-color: #f2b53a;
+  color: #f2b53a;
+}
+
+.gs-pod-2 .gs-pod-block {
+  height: 90px;
+  border-color: #c4c4c4;
+  color: #d8d8d8;
+}
+
+.gs-pod-3 .gs-pod-block {
+  height: 70px;
+  border-color: #b8692e;
+  color: #d98a52;
+}
+
+.gs-pod-rank {
+  font-size: 20px;
+  text-align: left;
+}
+
+.gs-pod-name {
+  overflow: hidden;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gs-pod-score {
+  font-size: 12px;
+}
+
+.gs-pod-others {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 18px;
+}
+
+.gs-pod-other {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 90px;
+  font-size: 12px;
+}
+
+.gs-pod-other .gs-avatar {
+  width: 54px;
+  height: 54px;
+}
+
+.gs-pod-other-rank {
+  color: #aab6cc;
+  font-weight: 800;
+}
+
+.gs-pod-other-name {
+  max-width: 100%;
+  overflow: hidden;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Your own avatar gets a green outline. */
+.gs-pod-you .gs-avatar {
+  box-shadow: 0 0 0 3px #7dff45;
+}
+
+.gs-pod-footer {
+  margin-top: auto;
+  color: #dce7ff;
+  font-size: 14px;
+}
